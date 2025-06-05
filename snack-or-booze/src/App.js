@@ -5,20 +5,30 @@ import Home from "./Home";
 import SnackOrBoozeApi from "./Api";
 import NavBar from "./NavBar";
 import { Route, Switch } from "react-router-dom";
-import Menu from "./FoodMenu";
-import Snack from "./FoodItem";
+import FoodMenu from "./FoodMenu";
+import FoodItem from "./FoodItem";
+import NewItemForm from "./NewItemForm";
+import NotFound from "./NotFound";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [snacks, setSnacks] = useState([]);
+  const [drinks, setDrinks] = useState([]);
 
   useEffect(() => {
-    async function getSnacks() {
-      let snacks = await SnackOrBoozeApi.getSnacks();
-      setSnacks(snacks);
-      setIsLoading(false);
+    async function fetchData() {
+      try {
+        const snacksData = await SnackOrBoozeApi.getSnacks();
+        const drinksData = await SnackOrBoozeApi.getDrinks();
+        setSnacks(snacksData);
+        setDrinks(drinksData);
+        setIsLoading(false);
+      } catch (e) {
+        console.error("Error loading data:", e);
+        setIsLoading(false);
+      }
     }
-    getSnacks();
+    fetchData();
   }, []);
 
   if (isLoading) {
@@ -32,16 +42,25 @@ function App() {
         <main>
           <Switch>
             <Route exact path="/">
-              <Home snacks={snacks} />
+              <Home snacks={snacks} drinks={drinks} />
             </Route>
             <Route exact path="/snacks">
-              <Menu snacks={snacks} title="Snacks" />
+              <FoodMenu snacks={snacks} />
             </Route>
             <Route path="/snacks/:id">
-              <Snack items={snacks} cantFind="/snacks" />
+              <FoodItem items={snacks} cantFind="/snacks" />
+            </Route>
+            <Route exact path="/drinks">
+              <FoodMenu drinks={drinks} />
+            </Route>
+            <Route path="/drinks/:id">
+              <FoodItem items={drinks} cantFind="/drinks" />
+            </Route>
+            <Route path="/add">
+              <NewItemForm />
             </Route>
             <Route>
-              <p>Hmmm. I can't seem to find what you want.</p>
+              <NotFound />
             </Route>
           </Switch>
         </main>
